@@ -192,24 +192,43 @@
   </div>
 </div>
 <script>
-let incidents=[
-  {id:'MI-0047',title:'Payment Gateway Timeout - All Regions',sev:'P1',status:'active',assigned:'J. Kowalski',opened:'Apr 30 09:14',mttr:null,system:'Payment Gateway'},
-  {id:'MI-0046',title:'Auth Service Outage - SSO Broken',sev:'P1',status:'investigating',assigned:'A. Hassan',opened:'Apr 30 07:52',mttr:null,system:'Auth Service'},
-  {id:'MI-0045',title:'Database Replication Lag >30s',sev:'P2',status:'resolved',assigned:'T. Nguyen',opened:'Apr 29 14:30',mttr:'2.4h',system:'Core DB'},
-  {id:'MI-0044',title:'CDN Cache Poisoning Detected',sev:'P2',status:'resolved',assigned:'A. Hassan',opened:'Apr 28 11:05',mttr:'1.8h',system:'CDN'},
-  {id:'MI-0043',title:'API Rate Limiter Misconfiguration',sev:'P3',status:'closed',assigned:'R. Patel',opened:'Apr 27 16:40',mttr:'0.9h',system:'API Gateway'},
-  {id:'MI-0042',title:'Monitoring Alerts Silenced - Config Drift',sev:'P2',status:'closed',assigned:'A. Hassan',opened:'Apr 26 08:20',mttr:'3.1h',system:'Monitoring'},
-  {id:'MI-0041',title:'Storage Node Disk Full - Logs Dropped',sev:'P3',status:'closed',assigned:'J. Kowalski',opened:'Apr 25 10:10',mttr:'1.2h',system:'Log Storage'},
+llet incidents=[
+  {id:'MI-0047',title:'SIEM Alert Storm - 4,000 False Positives Flood Queue',sev:'P1',status:'active',assigned:'A. Hassan',opened:'Apr 30 08:22',mttr:null,system:'SIEM / Splunk'},
+  {id:'MI-0046',title:'Lateral Movement Detected - Compromised Service Account',sev:'P1',status:'investigating',assigned:'A. Hassan',opened:'Apr 30 07:10',mttr:null,system:'Active Directory'},
+  {id:'MI-0045',title:'VPN Gateway Outage - Remote Access Down',sev:'P2',status:'resolved',assigned:'A. Hassan',opened:'Apr 29 13:45',mttr:'2.1h',system:'VPN / Network'},
+  {id:'MI-0044',title:'Unauthorized Outbound Traffic - Data Exfil Attempt',sev:'P1',status:'resolved',assigned:'A. Hassan',opened:'Apr 28 09:30',mttr:'3.4h',system:'Firewall / IDS'},
+  {id:'MI-0043',title:'VLAN Misconfiguration - Cross-Segment Traffic Detected',sev:'P2',status:'resolved',assigned:'A. Hassan',opened:'Apr 27 14:15',mttr:'1.7h',system:'Network Infrastructure'},
+  {id:'MI-0042',title:'Auth Log Ingestion Failure - 6hr Visibility Gap',sev:'P2',status:'closed',assigned:'A. Hassan',opened:'Apr 26 07:50',mttr:'2.9h',system:'Log Pipeline'},
+  {id:'MI-0041',title:'Phishing Campaign Detected - 3 Accounts Compromised',sev:'P2',status:'closed',assigned:'A. Hassan',opened:'Apr 25 11:20',mttr:'4.2h',system:'Email / Endpoint'},
 ];
-let comms=[
-  {time:'Apr 30 09:20',incident:'MI-0047',type:'Bridge Open',audience:'All BTS',msg:'Bridge opened. Payment team, DB team, and Network on call.',by:'A. Hassan'},
-  {time:'Apr 30 09:35',incident:'MI-0047',type:'Business Update',audience:'Leadership',msg:'P1 active - payment processing impacted. ETA 30 min.',by:'A. Hassan'},
-  {time:'Apr 30 08:00',incident:'MI-0046',type:'Escalation',audience:'On-call',msg:'SSO failures confirmed enterprise-wide. Escalating to P1.',by:'A. Hassan'},
-  {time:'Apr 29 16:45',incident:'MI-0045',type:'Resolution',audience:'All',msg:'Replication lag resolved. DB team patched replication config.',by:'T. Nguyen'},
+llet comms=[
+  {time:'Apr 30 08:30',incident:'MI-0047',type:'Bridge Open',audience:'All BTS',msg:'Bridge opened. SIEM team and SOC analysts engaged. Triaging alert volume.',by:'A. Hassan'},
+  {time:'Apr 30 08:55',incident:'MI-0047',type:'Business Update',audience:'Leadership',msg:'P1 active - SIEM queue flooded, triaging false positives. No confirmed breach. ETA 45 min.',by:'A. Hassan'},
+  {time:'Apr 30 07:20',incident:'MI-0046',type:'Escalation',audience:'On-call',msg:'Lateral movement confirmed via auth logs. Escalating to P1. AD team engaged.',by:'A. Hassan'},
+  {time:'Apr 29 15:50',incident:'MI-0045',type:'Resolution',audience:'All',msg:'VPN gateway restored. Root cause: BGP route table corruption after patch deployment.',by:'A. Hassan'},
+  {time:'Apr 28 12:45',incident:'MI-0044',type:'Containment',audience:'Security Team',msg:'Outbound traffic blocked at firewall. Affected endpoint isolated. Forensics started.',by:'A. Hassan'},
 ];
 let rcas=[
-  {id:'MI-0044',title:'CDN Cache Poisoning',date:'Apr 28',status:'Complete',rootCause:'Cache-Control headers misconfigured on /api/user endpoint allowed shared caching of user-specific responses.',timeline:'11:05 Alert fired. 11:20 Scope identified. 11:45 Cache purged. 12:50 Root cause confirmed.',impact:'~12,000 users received stale profile data for 1.8 hours.',actions:[{text:'Enforce Cache-Control: private on all auth-required routes',done:true},{text:'Add automated header validation in CI/CD pipeline',done:true},{text:'Quarterly CDN config review added to ops calendar',done:false}]},
-  {id:'MI-0042',title:'Monitoring Config Drift - 6hr Blind Window',date:'Apr 26',status:'In Progress',rootCause:'Alertmanager config overwritten during IaC merge conflict. Silenced all non-critical alerts.',timeline:'08:20 Ops noticed anomaly. 09:00 Traced to IaC conflict. 11:30 Config restored.',impact:'6-hour window with no alerting. Two minor incidents missed.',actions:[{text:'Add alertmanager config validation pre-deploy hook',done:true},{text:'Implement config drift detection via OPA policies',done:false},{text:'Create runbook: IaC merge conflict review checklist',done:false}]},
+  let rcas=[
+  {id:'MI-0044',title:'Unauthorized Outbound Traffic - Data Exfil Attempt',date:'Apr 28',status:'Complete',
+  rootCause:'Compromised user credential used to establish C2 beacon via DNS tunneling. Initial access via spearphishing email 72hrs prior. EDR alert was deprioritized due to high queue volume.',
+  timeline:'09:30 IDS fired on anomalous DNS volume. 09:45 Analyst (A. Hassan) correlated with auth logs - confirmed compromised account. 10:15 Endpoint isolated. 10:30 Firewall rules updated. 12:55 Root cause confirmed via forensic timeline.',
+  impact:'Single endpoint compromised. ~2.3GB outbound transfer attempted - blocked at perimeter. No confirmed data loss. Affected user credentials rotated.',
+  actions:[
+    {text:'Implement DNS monitoring threshold alerts in SIEM',done:true},
+    {text:'Enforce MFA on all privileged accounts',done:true},
+    {text:'Add EDR queue prioritization rules for C2 indicators',done:false},
+    {text:'Conduct phishing awareness training for affected department',done:false},
+  ]},
+  {id:'MI-0042',title:'Auth Log Ingestion Failure - 6hr Visibility Gap',date:'Apr 26',status:'In Progress',
+  rootCause:'Log forwarder agent on primary domain controller crashed after OS patch. No redundant forwarder configured. Failure went undetected for 6 hours due to missing heartbeat alert.',
+  timeline:'07:50 SOC noticed absence of auth events in SIEM. 08:30 Traced to DC log forwarder crash. 09:00 Backup forwarder activated. 10:45 Full ingestion restored. Gap backfilled from DC event logs.',
+  impact:'6-hour blind window across authentication telemetry. Reviewed backfilled logs - no suspicious activity identified during gap period.',
+  actions:[
+    {text:'Deploy redundant log forwarder on all critical DCs',done:true},
+    {text:'Add SIEM heartbeat alert for log source silence >15min',done:false},
+    {text:'Include log pipeline in monthly DR test',done:false},
+  ]},
 ];
 function renderTable(data,bodyId){
   const b=document.getElementById(bodyId);
